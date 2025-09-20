@@ -6,16 +6,22 @@ const cors = require('cors');
 const fs = require('fs').promises;
 const path = require('path');
 const crypto = require('crypto');
+const { Pool } = require('pg');
 
 const app = express();
 const PORT = process.env.PORT || 3003;
+
+// Database connection
+const pool = new Pool({
+    connectionString: process.env.DATABASE_URL || 'postgresql://localhost:5432/skyparty'
+});
 
 // Middleware
 app.use(cors());
 app.use(express.json());
 app.use(express.static('public'));
 
-// Data directory
+// Data directory (fallback for local storage)
 const DATA_DIR = path.join(__dirname, 'data');
 
 // Ensure data directory exists
@@ -742,6 +748,179 @@ app.get('/api/health', (req, res) => {
     });
 });
 
+// ===== API ENDPOINTS =====
+
+// Health check
+app.get('/api/health', (req, res) => {
+    res.json({
+        status: 'ok',
+        message: 'SkyParty API Server is running',
+        timestamp: new Date().toISOString()
+    });
+});
+
+// Register user
+app.post('/api/register', async (req, res) => {
+    try {
+        const { username, email, password } = req.body;
+        
+        if (!username || !email || !password) {
+            return res.status(400).json({ success: false, message: 'Missing required fields' });
+        }
+        
+        const client = await pool.connect();
+        
+        // Check if user already exists
+        const existingUser = await client.query(
+            'SELECT id FROM users WHERE username = $1 OR email = $2',
+            [username, email]
+        );
+        
+        if (existingUser.rows.length > 0) {
+            client.release();
+            return res.status(400).json({ success: false, message: 'Username or email already exists' });
+        }
+        
+        // Hash password (simple hash for now)
+        const passwordHash = crypto.createHash('sha256').update(password).digest('hex');
+        
+        // Insert new user
+        const result = await client.query(
+            'INSERT INTO users (username, email, password_hash) VALUES ($1, $2, $3) RETURNING id',
+            [username, email, passwordHash]
+        );
+        
+        client.release();
+        
+        res.json({
+            success: true,
+            message: 'User registered successfully',
+            userId: result.rows[0].id
+        });
+        
+    } catch (error) {
+        console.error('Registration error:', error);
+        res.status(500).json({ success: false, message: 'Registration failed' });
+    }
+});
+
+// Login user
+app.post('/api/login', async (req, res) => {
+    try {
+        const { username, password } = req.body;
+        
+        if (!username || !password) {
+            return res.status(400).json({ success: false, message: 'Missing username or password' });
+        }
+        
+        const client = await pool.connect();
+        
+        // Find user
+        const result = await client.query(
+            'SELECT id, username, email, password_hash FROM users WHERE username = $1',
+            [username]
+        );
+        
+        if (result.rows.length === 0) {
+            client.release();
+            return res.status(401).json({ success: false, message: 'Invalid credentials' });
+        }
+        
+        const user = result.rows[0];
+        const passwordHash = crypto.createHash('sha256').update(password).digest('hex');
+        
+        if (user.password_hash !== passwordHash) {
+            client.release();
+            return res.status(401).json({ success: false, message: 'Invalid credentials' });
+        }
+        
+        // Update last login
+        await client.query(
+            'UPDATE users SET last_login = CURRENT_TIMESTAMP WHERE id = $1',
+            [user.id]
+        );
+        
+        client.release();
+        
+        res.json({
+            success: true,
+            message: 'Login successful',
+            user: {
+                id: user.id,
+                username: user.username,
+                email: user.email
+            }
+        });
+        
+    } catch (error) {
+        console.error('Login error:', error);
+        res.status(500).json({ success: false, message: 'Login failed' });
+    }
+});
+
+// Get user data
+app.get('/api/user/:userId/data', async (req, res) => {
+    try {
+        const { userId } = req.params;
+        
+        const client = await pool.connect();
+        
+        const result = await client.query(
+            'SELECT data_type, data_value FROM user_data WHERE user_id = $1',
+            [userId]
+        );
+        
+        client.release();
+        
+        // Convert to object format
+        const userData = {};
+        result.rows.forEach(row => {
+            userData[row.data_type] = row.data_value;
+        });
+        
+        res.json({
+            success: true,
+            data: userData
+        });
+        
+    } catch (error) {
+        console.error('Get user data error:', error);
+        res.status(500).json({ success: false, message: 'Failed to get user data' });
+    }
+});
+
+// Update user data
+app.put('/api/user/:userId/data', async (req, res) => {
+    try {
+        const { userId } = req.params;
+        const data = req.body;
+        
+        const client = await pool.connect();
+        
+        // Update or insert each data type
+        for (const [dataType, dataValue] of Object.entries(data)) {
+            await client.query(
+                `INSERT INTO user_data (user_id, data_type, data_value, updated_at) 
+                 VALUES ($1, $2, $3, CURRENT_TIMESTAMP)
+                 ON CONFLICT (user_id, data_type) 
+                 DO UPDATE SET data_value = $3, updated_at = CURRENT_TIMESTAMP`,
+                [userId, dataType, dataValue]
+            );
+        }
+        
+        client.release();
+        
+        res.json({
+            success: true,
+            message: 'User data updated successfully'
+        });
+        
+    } catch (error) {
+        console.error('Update user data error:', error);
+        res.status(500).json({ success: false, message: 'Failed to update user data' });
+    }
+});
+
 // Error handling middleware
 app.use((err, req, res, next) => {
     console.error(err.stack);
@@ -753,13 +932,53 @@ app.use((req, res) => {
     res.status(404).json({ success: false, error: 'Endpoint not found' });
 });
 
+// Create database tables
+async function createTables() {
+    try {
+        console.log('🔧 Creating database tables...');
+        
+        const client = await pool.connect();
+        
+        // Create users table
+        await client.query(`
+            CREATE TABLE IF NOT EXISTS users (
+                id SERIAL PRIMARY KEY,
+                username VARCHAR(50) UNIQUE NOT NULL,
+                email VARCHAR(100) UNIQUE NOT NULL,
+                password_hash VARCHAR(255) NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                last_login TIMESTAMP
+            )
+        `);
+        
+        // Create user_data table for game data
+        await client.query(`
+            CREATE TABLE IF NOT EXISTS user_data (
+                id SERIAL PRIMARY KEY,
+                user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+                data_type VARCHAR(50) NOT NULL,
+                data_value JSONB,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        `);
+        
+        client.release();
+        console.log('✅ Database tables created successfully!');
+    } catch (error) {
+        console.error('❌ Error creating tables:', error.message);
+    }
+}
+
 // Start server
 async function startServer() {
     await ensureDataDir();
+    await createTables();
     app.listen(PORT, () => {
         console.log(`🎮 SkyParty Backend Server running on port ${PORT}`);
         console.log(`📊 Health check: http://localhost:${PORT}/api/health`);
         console.log(`📁 Data directory: ${DATA_DIR}`);
+        console.log(`🗄️ Database: Connected to PostgreSQL`);
     });
 }
 
