@@ -2216,10 +2216,23 @@
         }
 
         // Railway API Configuration
-        const RAILWAY_API_URL = 'https://your-railway-project.up.railway.app'; // Replace with your Railway URL
+        const RAILWAY_API_URL = 'https://skyparty-desktop-production.up.railway.app'; // Railway API Server
         let currentUserId = null; // Store current user ID from Railway
         
         // ===== RAILWAY API FUNCTIONS =====
+        
+        // Test Railway connection
+        async function testRailwayConnection() {
+            try {
+                const response = await fetch(`${RAILWAY_API_URL}/api/health`);
+                const result = await response.json();
+                console.log('🚀 Railway connection test:', result);
+                return result.status === 'ok';
+            } catch (error) {
+                console.error('❌ Railway connection failed:', error);
+                return false;
+            }
+        }
         
         // Register user with Railway
         async function registerUser(username, email, password) {
@@ -4101,6 +4114,14 @@
 
         // Add event listeners to clear errors when user types
         document.addEventListener('DOMContentLoaded', function() {
+            // Test Railway connection on app load
+            testRailwayConnection().then(isConnected => {
+                if (isConnected) {
+                    console.log('✅ Railway API connected successfully!');
+                } else {
+                    console.log('⚠️ Railway API not available, using local storage fallback');
+                }
+            });
             // Registration fields
             const regFields = ['regUsername', 'regDateOfBirth', 'regEmail', 'regPassword'];
             regFields.forEach(fieldId => {
