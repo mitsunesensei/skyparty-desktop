@@ -12,6 +12,7 @@ const app = express();
 const PORT = process.env.PORT || 3003;
 
 // Database connection
+console.log('🔍 DATABASE_URL:', process.env.DATABASE_URL ? 'Set' : 'Not set');
 const pool = new Pool({
     connectionString: process.env.DATABASE_URL || 'postgresql://localhost:5432/skyparty'
 });
@@ -936,8 +937,10 @@ app.use((req, res) => {
 async function createTables() {
     try {
         console.log('🔧 Creating database tables...');
+        console.log('🔍 Attempting to connect to database...');
         
         const client = await pool.connect();
+        console.log('✅ Database connection successful!');
         
         // Create users table
         await client.query(`
