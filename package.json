@@ -2,13 +2,14 @@
   "name": "skyparty-desktop",
   "version": "1.0.0",
   "description": "SkyParty Desktop Application with Railway Integration",
-  "main": "main.js",
+  "main": "server.js",
   "scripts": {
-    "start": "electron .",
-    "dev": "electron . --dev",
+    "start": "node server.js",
+    "dev": "node server.js",
     "build": "electron-builder",
     "dist": "electron-builder --publish=never",
-    "server": "node server.js"
+    "server": "node server.js",
+    "electron": "electron ."
   },
   "keywords": [
     "skyparty",
