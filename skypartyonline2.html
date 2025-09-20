@@ -3218,72 +3218,52 @@
             performLogin(emailToUse, password);
         }
         
-        function performLogin(emailToUse, password) {
-            // Validate email format
+        async function performLogin(emailToUse, password) {
+            // Check if it's a username or email
             const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-            if (!emailRegex.test(emailToUse)) {
-                alert('Please enter a valid username or email address.');
-                return;
+            const isEmail = emailRegex.test(emailToUse);
+            
+            console.log('Attempting Railway login with:', emailToUse, isEmail ? '(email)' : '(username)');
+            
+            // Login with Railway
+            const user = await loginUser(emailToUse, password);
+            
+            if (user) {
+                console.log('Railway login successful:', user);
+                
+                // Set current user info
+                currentUser = user.email;
+                currentUserId = user.id;
+                
+                // Load user data from Railway
+                const userData = await getUserData();
+                if (userData) {
+                    currentCharacter = userData.currentCharacter || 'kitty';
+                    ownedCharacters = userData.ownedCharacters || ['kitty'];
+                    gameCredits = userData.gameCredits || 150;
+                }
+                
+                // Clear form
+                document.getElementById('username').value = '';
+                document.getElementById('password').value = '';
+                
+                // Show success message
+                alert('Login successful! Welcome to the Game Universe!');
+                
+                // Switch to dashboard
+                showSection('dashboard');
+                // Manually set the dashboard sidebar item as active
+                const dashboardItem = document.querySelectorAll('.sidebar-item')[2];
+                if (dashboardItem && dashboardItem.classList) {
+                    dashboardItem.classList.add('active');
+                }
+            } else {
+                console.log('Railway login failed');
+                alert('Login failed. Please check your username/email and password.');
             }
-            
-            console.log('Attempting Firebase login with email:', emailToUse);
-            
-            // Sign in with Firebase
-            auth.signInWithEmailAndPassword(emailToUse, password)
-                .then((userCredential) => {
-                    console.log('Login successful:', userCredential.user);
-                    // Success - auth state listener will handle UI updates
-                    
-                    // Clear form
-                    document.getElementById('username').value = '';
-                    document.getElementById('password').value = '';
-                    
-                    // Show success message
-                    alert('Login successful! Welcome to the Game Universe!');
-                    
-                    // Switch to dashboard
-                    showSection('dashboard');
-                    // Manually set the dashboard sidebar item as active
-                    const dashboardItem = document.querySelectorAll('.sidebar-item')[2];
-                    if (dashboardItem && dashboardItem.classList) {
-                        dashboardItem.classList.add('active');
-                    }
-                })
-                .catch((error) => {
-                    console.error('Login error details:', error);
-                    console.error('Error code:', error.code);
-                    console.error('Error message:', error.message);
-                    
-                    let errorMessage = 'Login failed. ';
-                    
-                    switch(error.code) {
-                        case 'auth/user-not-found':
-                            errorMessage += 'No account found with this email. Please register first.';
-                            break;
-                        case 'auth/wrong-password':
-                            errorMessage += 'Incorrect password. Please try again.';
-                            break;
-                        case 'auth/invalid-email':
-                            errorMessage += 'Invalid email address format.';
-                            break;
-                        case 'auth/user-disabled':
-                            errorMessage += 'This account has been disabled.';
-                            break;
-                        case 'auth/too-many-requests':
-                            errorMessage += 'Too many failed attempts. Please try again later.';
-                            break;
-                        case 'auth/invalid-credential':
-                            errorMessage += 'Invalid credentials. Please check your email and password, or register a new account.';
-                            break;
-                        case 'auth/network-request-failed':
-                            errorMessage += 'Network error. Please check your internet connection.';
-                            break;
-                        default:
-                            errorMessage += error.message;
-                    }
-                    
-                    alert(errorMessage);
-                });
+        } catch (error) {
+            console.error('Railway login error:', error);
+            alert('Login failed. Please try again.');
         }
 
         function register() {
@@ -3359,75 +3339,44 @@
                 }
             }
             
-            // Check if username is already taken
-            if (username) {
-                try {
-                    const mappings = await getUsernameMappings();
-                    if (mappings[username]) {
-                        showFieldError('username', 'This username is already used');
-                        hasErrors = true;
-                    }
-                } catch (error) {
-                    console.error('Error checking username availability:', error);
-                    showFieldError('username', 'Error checking username availability');
-                    hasErrors = true;
-                }
-            }
+            // Check if username is already taken (Railway will handle this)
+            // We'll let Railway API handle username uniqueness validation
             
             // If there are any errors, stop here
             if (hasErrors) {
                 return;
             }
             
-            console.log('Attempting registration with:', { username, email, dateOfBirth });
+            console.log('Attempting registration with Railway:', { username, email, dateOfBirth });
             
-            // Create user with Firebase
-            auth.createUserWithEmailAndPassword(email, password)
-                .then((userCredential) => {
-                    console.log('Registration successful:', userCredential.user);
-                    
-                    // Store username-email mapping
-                    storeUsernameMapping(username, email);
-                    
-                    // Initialize character data for new user
-                    currentCharacter = 'kitty';
-                    ownedCharacters = ['kitty'];
-                    gameCredits = 150;
-                    
-                    // Don't update UI immediately - let the auth state listener handle it
-                    // This prevents the username from showing before login
-                    
-                    // Success - show success step
-                    showRegistrationStep('registrationSuccess');
+            // Register user with Railway
+            registerUser(username, email, password)
+                .then((success) => {
+                    if (success) {
+                        console.log('Railway registration successful');
+                        
+                        // Initialize character data for new user
+                        currentCharacter = 'kitty';
+                        ownedCharacters = ['kitty'];
+                        gameCredits = 150;
+                        
+                        // Store initial user data on Railway
+                        updateUserData({
+                            currentCharacter: currentCharacter,
+                            ownedCharacters: ownedCharacters,
+                            gameCredits: gameCredits,
+                            dateOfBirth: dateOfBirth
+                        });
+                        
+                        // Success - show success step
+                        showRegistrationStep('registrationSuccess');
+                    } else {
+                        showFieldError('username', 'Registration failed. Username or email may already exist.');
+                    }
                 })
                 .catch((error) => {
-                    console.error('Registration error details:', error);
-                    console.error('Error code:', error.code);
-                    console.error('Error message:', error.message);
-                    
-                    let errorMessage = 'Registration failed. ';
-                    
-                    switch(error.code) {
-                        case 'auth/email-already-in-use':
-                            errorMessage += 'An account with this email already exists. Please use a different email or try logging in.';
-                            break;
-                        case 'auth/invalid-email':
-                            errorMessage += 'Invalid email address format.';
-                            break;
-                        case 'auth/weak-password':
-                            errorMessage += 'Password is too weak. Please choose a stronger password (6+ characters).';
-                            break;
-                        case 'auth/operation-not-allowed':
-                            errorMessage += 'Email/password accounts are not enabled in Firebase.';
-                            break;
-                        case 'auth/network-request-failed':
-                            errorMessage += 'Network error. Please check your internet connection.';
-                            break;
-                        default:
-                            errorMessage += error.message;
-                    }
-                    
-                    alert(errorMessage);
+                    console.error('Railway registration error:', error);
+                    showFieldError('username', 'Registration failed. Please try again.');
                 });
         }
 
