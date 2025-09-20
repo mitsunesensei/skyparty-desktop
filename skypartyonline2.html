@@ -3206,10 +3206,25 @@
         function updateUIForLoggedInUser(username) {
             console.log('Updating UI for logged in user:', username);
             
-            // Hide login sidebar item
-            document.getElementById('loginSidebarItem').style.display = 'none';
+            // Update status display
+            const userInfoElement = document.getElementById('userInfo');
+            if (userInfoElement) {
+                const statusDiv = userInfoElement.querySelector('div:last-child');
+                if (statusDiv) {
+                    statusDiv.innerHTML = `<strong>Status:</strong> Logged in as ${username}`;
+                }
+            }
             
-            // Show profile sidebar item and make it active
+            // Show profile panel and hide login panel
+            document.getElementById('login').classList.remove('active');
+            document.getElementById('profile').classList.add('active');
+            
+            // Show all sidebar navigation
+            document.querySelectorAll('.sidebar-item').forEach(item => {
+                item.style.display = 'block';
+                item.classList.remove('active'); // Remove active from all items first
+            });
+            document.getElementById('loginSidebarItem').style.display = 'none';
             document.getElementById('profileSidebarItem').style.display = 'block';
             document.getElementById('profileSidebarItem').classList.add('active');
             document.getElementById('logoutBtn').style.display = 'block';
