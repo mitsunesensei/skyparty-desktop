@@ -3206,14 +3206,16 @@
         function updateUIForLoggedInUser(username) {
             console.log('Updating UI for logged in user:', username);
             
-            // Update status display
-            const userInfoElement = document.getElementById('userInfo');
-            if (userInfoElement) {
-                const statusDiv = userInfoElement.querySelector('div:last-child');
-                if (statusDiv) {
-                    statusDiv.innerHTML = `<strong>Status:</strong> Logged in as ${username}`;
-                }
-            }
+            // Update user info box (avatar and status)
+            document.getElementById('userInfo').innerHTML = `
+                <div class="user-info-avatar logged-in" id="userInfoAvatar">${localStorage.getItem('userAvatar') || '👤'}</div>
+                <div><strong>User:</strong> ${username}</div>
+                <div><strong>Status:</strong> Online</div>
+            `;
+            document.getElementById('userInfo').classList.add('logged-in');
+            
+            // Update profile panel
+            document.getElementById('profileUsername').textContent = username;
             
             // Show profile panel and hide login panel
             document.getElementById('login').classList.remove('active');
