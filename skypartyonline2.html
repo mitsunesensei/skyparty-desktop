@@ -3937,16 +3937,18 @@
                 return;
             }
             
-            // For now, fallback to local storage since Railway search endpoint doesn't exist yet
-            // TODO: Implement Railway user search API endpoint
+            // Search users using Railway API
             try {
-                const usernameMappings = await getUsernameMappings();
-                const usernames = Object.keys(usernameMappings);
+                const response = await fetch(`${RAILWAY_API_URL}/api/users/search?query=${encodeURIComponent(searchTerm)}`);
+                const result = await response.json();
                 
-                // Filter usernames based on search term
-                const filteredUsers = usernames.filter(username => 
-                    username.toLowerCase().includes(searchTerm)
-                );
+                let filteredUsers = [];
+                if (result.success) {
+                    filteredUsers = result.users.map(user => user.username);
+                } else {
+                    console.error('Railway search failed:', result.error);
+                    filteredUsers = [];
+                }
                 
                 if (filteredUsers.length === 0) {
                     userResultsList.innerHTML = `
