@@ -3202,50 +3202,17 @@
             performLogin(usernameOrEmail, password);
         }
         
-        // Update UI for Railway login (replaces Firebase auth state listener)
+        // Update UI for Railway login (copies Firebase auth state listener logic)
         function updateUIForLoggedInUser(username) {
             console.log('Updating UI for logged in user:', username);
             
-            // Update status display
-            const userInfoElement = document.getElementById('userInfo');
-            if (userInfoElement) {
-                const statusDiv = userInfoElement.querySelector('div:last-child');
-                if (statusDiv) {
-                    statusDiv.innerHTML = `<strong>Status:</strong> Logged in as ${username}`;
-                }
-            }
+            // Hide login sidebar item
+            document.getElementById('loginSidebarItem').style.display = 'none';
             
-            // Update sidebar - hide login items, show profile items
-            const loginSidebarItem = document.querySelector('.sidebar-item[onclick*="login"]');
-            const profileSidebarItem = document.getElementById('profileSidebarItem');
-            
-            if (loginSidebarItem) {
-                loginSidebarItem.style.display = 'none';
-            }
-            
-            if (profileSidebarItem) {
-                profileSidebarItem.style.display = 'block';
-                // Remove active class from all sidebar items first
-                document.querySelectorAll('.sidebar-item').forEach(item => {
-                    item.classList.remove('active');
-                });
-                // Set profile as active
-                profileSidebarItem.classList.add('active');
-            }
-            
-            // Update navigation items (if they exist)
-            const navItems = document.querySelectorAll('.nav-item');
-            if (navItems.length > 0) {
-                navItems.forEach(item => {
-                    item.classList.remove('active');
-                });
-                
-                // Set profile navigation as active if it exists
-                const profileNavItem = document.querySelector('.nav-item[onclick*="profile"]');
-                if (profileNavItem) {
-                    profileNavItem.classList.add('active');
-                }
-            }
+            // Show profile sidebar item and make it active
+            document.getElementById('profileSidebarItem').style.display = 'block';
+            document.getElementById('profileSidebarItem').classList.add('active');
+            document.getElementById('logoutBtn').style.display = 'block';
             
             // Show Quick Access section when logged in
             const quickAccessSection = document.querySelectorAll('.sidebar-section')[1];
@@ -3253,10 +3220,45 @@
                 quickAccessSection.style.display = 'block';
             }
             
-            // Update avatar
-            updateAvatar();
+            // Change sidebar title to "Navigation"
+            const sidebarTitle = document.getElementById('sidebarTitle');
+            if (sidebarTitle) {
+                sidebarTitle.textContent = 'Navigation';
+            }
             
-            console.log('UI updated for Railway login');
+            // Update credits display
+            document.getElementById('creditsAmount').textContent = gameCredits;
+            document.getElementById('gcBalance').textContent = gameCredits + ' GC';
+            document.getElementById('creditsAmountSidebar').textContent = gameCredits + ' GC';
+            
+            // Show the credits info box when logged in
+            document.getElementById('creditsInfo').style.display = 'block';
+            
+            // Show logout button
+            document.getElementById('logoutBtn').style.display = 'block';
+            
+            // Update character card statuses for the logged-in user
+            setTimeout(() => {
+                updateCharacterCardStatuses();
+            }, 100);
+            
+            // Update DM notification dot for the logged-in user
+            setTimeout(() => {
+                loadDMMessages();
+                updateDMNotificationDot();
+            }, 200);
+            
+            // Initialize mailbox for the logged-in user
+            setTimeout(() => {
+                initializeMailbox();
+            }, 300);
+            
+            // Initialize inventory for the logged-in user
+            setTimeout(() => {
+                initializeInventory();
+            }, 400);
+            
+            console.log('User successfully signed in via Railway:', username);
         }
         
         async function performLogin(usernameOrEmail, password) {
