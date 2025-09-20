@@ -3198,36 +3198,20 @@
             const isEmail = usernameOrEmail.includes('@');
             let emailToUse = usernameOrEmail;
             
-            // If it's a username, find the corresponding email
-            if (!isEmail) {
-                getEmailFromUsername(usernameOrEmail).then(email => {
-                    if (!email) {
-                        alert('Username not found. Please check your username or register a new account.');
-                        return;
-                    }
-                    console.log('Found email for username:', usernameOrEmail, '->', email);
-                    emailToUse = email;
-                    
-                    // Continue with login process
-                    performLogin(emailToUse, password);
-                });
-                return;
-            }
-            
-            // If it's an email, continue with login
-            performLogin(emailToUse, password);
+            // Railway loginUser can handle both usernames and emails directly
+            performLogin(usernameOrEmail, password);
         }
         
-        async function performLogin(emailToUse, password) {
+        async function performLogin(usernameOrEmail, password) {
             try {
                 // Check if it's a username or email
                 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-                const isEmail = emailRegex.test(emailToUse);
+                const isEmail = emailRegex.test(usernameOrEmail);
                 
-                console.log('Attempting Railway login with:', emailToUse, isEmail ? '(email)' : '(username)');
+                console.log('Attempting Railway login with:', usernameOrEmail, isEmail ? '(email)' : '(username)');
                 
-                // Login with Railway
-                const user = await loginUser(emailToUse, password);
+                // Login with Railway (can handle both username and email)
+                const user = await loginUser(usernameOrEmail, password);
                 
                 if (user) {
                     console.log('Railway login successful:', user);
