@@ -1,0 +1,9 @@
+@echo off
+echo Starting SkyParty Backend Server...
+echo.
+echo Installing dependencies...
+npm install
+echo.
+echo Starting server...
+npm start
+pause
