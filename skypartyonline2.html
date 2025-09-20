@@ -3219,51 +3219,53 @@
         }
         
         async function performLogin(emailToUse, password) {
-            // Check if it's a username or email
-            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-            const isEmail = emailRegex.test(emailToUse);
-            
-            console.log('Attempting Railway login with:', emailToUse, isEmail ? '(email)' : '(username)');
-            
-            // Login with Railway
-            const user = await loginUser(emailToUse, password);
-            
-            if (user) {
-                console.log('Railway login successful:', user);
+            try {
+                // Check if it's a username or email
+                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                const isEmail = emailRegex.test(emailToUse);
                 
-                // Set current user info
-                currentUser = user.email;
-                currentUserId = user.id;
+                console.log('Attempting Railway login with:', emailToUse, isEmail ? '(email)' : '(username)');
                 
-                // Load user data from Railway
-                const userData = await getUserData();
-                if (userData) {
-                    currentCharacter = userData.currentCharacter || 'kitty';
-                    ownedCharacters = userData.ownedCharacters || ['kitty'];
-                    gameCredits = userData.gameCredits || 150;
+                // Login with Railway
+                const user = await loginUser(emailToUse, password);
+                
+                if (user) {
+                    console.log('Railway login successful:', user);
+                    
+                    // Set current user info
+                    currentUser = user.email;
+                    currentUserId = user.id;
+                    
+                    // Load user data from Railway
+                    const userData = await getUserData();
+                    if (userData) {
+                        currentCharacter = userData.currentCharacter || 'kitty';
+                        ownedCharacters = userData.ownedCharacters || ['kitty'];
+                        gameCredits = userData.gameCredits || 150;
+                    }
+                    
+                    // Clear form
+                    document.getElementById('username').value = '';
+                    document.getElementById('password').value = '';
+                    
+                    // Show success message
+                    alert('Login successful! Welcome to the Game Universe!');
+                    
+                    // Switch to dashboard
+                    showSection('dashboard');
+                    // Manually set the dashboard sidebar item as active
+                    const dashboardItem = document.querySelectorAll('.sidebar-item')[2];
+                    if (dashboardItem && dashboardItem.classList) {
+                        dashboardItem.classList.add('active');
+                    }
+                } else {
+                    console.log('Railway login failed');
+                    alert('Login failed. Please check your username/email and password.');
                 }
-                
-                // Clear form
-                document.getElementById('username').value = '';
-                document.getElementById('password').value = '';
-                
-                // Show success message
-                alert('Login successful! Welcome to the Game Universe!');
-                
-                // Switch to dashboard
-                showSection('dashboard');
-                // Manually set the dashboard sidebar item as active
-                const dashboardItem = document.querySelectorAll('.sidebar-item')[2];
-                if (dashboardItem && dashboardItem.classList) {
-                    dashboardItem.classList.add('active');
-                }
-            } else {
-                console.log('Railway login failed');
-                alert('Login failed. Please check your username/email and password.');
+            } catch (error) {
+                console.error('Railway login error:', error);
+                alert('Login failed. Please try again.');
             }
-        } catch (error) {
-            console.error('Railway login error:', error);
-            alert('Login failed. Please try again.');
         }
 
         function register() {
