@@ -1,0 +1,40 @@
+{
+  "name": "skyparty-desktop",
+  "version": "1.0.0",
+  "description": "SkyParty Desktop Application",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "build": "electron-builder",
+    "dist": "electron-builder --publish=never"
+  },
+  "keywords": [
+    "skyparty",
+    "desktop",
+    "electron"
+  ],
+  "author": "SkyParty Team",
+  "license": "MIT",
+  "devDependencies": {
+    "electron": "^38.1.2",
+    "electron-packager": "^17.1.2"
+  },
+  "build": {
+    "appId": "com.skyparty.desktop",
+    "productName": "SkyParty",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "main.js",
+      "skypartyonline2.html",
+      "package.json"
+    ],
+    "win": {
+      "target": "portable",
+      "icon": "icon.ico",
+      "sign": false
+    },
+    "forceCodeSigning": false
+  }
+}
