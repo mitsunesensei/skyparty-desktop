@@ -3247,6 +3247,12 @@
                 }
             }
             
+            // Show Quick Access section when logged in
+            const quickAccessSection = document.querySelectorAll('.sidebar-section')[1];
+            if (quickAccessSection) {
+                quickAccessSection.style.display = 'block';
+            }
+            
             // Update avatar
             updateAvatar();
             
