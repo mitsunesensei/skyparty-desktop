@@ -1,86 +1,130 @@
-# SkyParty Backend Server
+# SkyParty Desktop App
 
-A complete backend server for the SkyParty desktop application.
+A desktop gaming application built with Electron and integrated with Railway for online data storage.
+
+## 🎮 Features
+
+- **Desktop App**: Built with Electron for cross-platform compatibility
+- **Online Data**: Integrated with Railway PostgreSQL database
+- **User Management**: Registration, login, and user data storage
+- **Game Features**: Character management, credits, inventory, messaging
+- **Real-time Updates**: Data synced across devices via Railway
 
 ## 🚀 Quick Start
 
-### Option 1: Use the Batch File (Easiest)
-1. Double-click `start-backend.bat`
-2. Wait for dependencies to install
-3. Server will start automatically
+### Prerequisites
+- Node.js (v14 or higher)
+- Railway account
+- PostgreSQL database
 
-### Option 2: Manual Setup
-1. Open Command Prompt in this folder
-2. Run: `npm install`
-3. Run: `npm start`
+### Installation
 
-## 📊 Server Information
+1. **Clone the repository**
+   ```bash
+   git clone <your-repo-url>
+   cd skypartyonline2
+   ```
 
-- **Port**: 3003
-- **Health Check**: http://localhost:3003/api/health
-- **Data Directory**: `./data/` (auto-created)
+2. **Install dependencies**
+   ```bash
+   npm install
+   ```
 
-## 🔧 API Endpoints
+3. **Build the desktop app**
+   ```bash
+   npm run build
+   ```
+
+4. **Run the app**
+   ```bash
+   npm start
+   ```
+
+## 🛠️ Development
+
+### Project Structure
+```
+skypartyonline2/
+├── main.js                 # Electron main process
+├── skypartyonline2.html   # Main application UI
+├── railway-api-server.js  # Railway API server
+├── package.json           # Dependencies and scripts
+└── dist/                  # Built applications
+```
+
+### Building Standalone App
+```bash
+# Build standalone executable
+npx electron-packager . SkyParty-Standalone --platform=win32 --arch=x64 --out=dist --overwrite
+```
+
+### Railway Deployment
+1. Upload `railway-api-server.js` and `railway-package.json` to Railway
+2. Set environment variable `DATABASE_URL`
+3. Deploy the server
+4. Update `RAILWAY_API_URL` in the HTML file
+
+## 📱 API Endpoints
 
 ### User Management
-- `POST /api/users/register` - Register new user
-- `POST /api/users/login` - User login
-- `GET /api/users/search` - Search users
+- `POST /api/register` - Register new user
+- `POST /api/login` - User login
+- `GET /api/user/:userId/data` - Get user data
+- `PUT /api/user/:userId/data` - Update user data
 
-### Activation
-- `POST /api/activation/activate` - Activate user account
+### Health Check
+- `GET /api/health` - Server health status
 
-### Credits
-- `POST /api/credits/update` - Add/subtract credits
+## 🗄️ Database Schema
 
-### Characters
-- `POST /api/characters/purchase` - Buy character
-- `POST /api/characters/select` - Select character
+### Tables
+- **users** - User accounts and authentication
+- **user_data** - Game progress and credits
+- **characters** - Character ownership and status
+- **messages** - User messaging system
+- **inventory** - User items and purchases
 
-### Inventory
-- `GET /api/inventory/:userId` - Get user inventory
-- `POST /api/inventory/add` - Add item to inventory
+## 🔧 Configuration
 
-### Messaging
-- `GET /api/messages/conversations/:userId` - Get conversations
-- `POST /api/messages/send` - Send message
+### Railway API URL
+Update the `RAILWAY_API_URL` in `skypartyonline2.html`:
+```javascript
+const RAILWAY_API_URL = 'https://your-railway-project.up.railway.app';
+```
 
-### Mailbox/Gifts
-- `GET /api/mailbox/:userId` - Get mailbox
-- `POST /api/mailbox/send-gift` - Send gift
-- `POST /api/mailbox/claim-gift` - Accept/reject gift
+### Database Connection
+Set the `DATABASE_URL` environment variable in Railway:
+```
+DATABASE_URL=postgresql://username:password@host:port/database
+```
 
-### Admin
-- `GET /api/admin/stats` - Get server statistics
-- `GET /api/admin/backup` - Backup all data
-- `POST /api/admin/restore` - Restore data
+## 📦 Distribution
 
-## 💾 Data Storage
+### Standalone App
+The built standalone app is located in `dist/SkyParty-Standalone-win32-x64/` and includes:
+- All dependencies
+- Portable executable
+- No installation required
 
-All data is stored in JSON files in the `data/` directory:
-- `users.json` - User accounts
-- `inventory_[userId].json` - User inventories
-- `mailbox_[userId].json` - User mailboxes
-- `conversations_[userId].json` - User conversations
-- `transactions.json` - Credit transactions
-- `game_sessions.json` - Game session logs
+### Installer
+Use the provided installer script or Inno Setup to create a Windows installer.
 
-## 🔒 Security Notes
+## 🤝 Contributing
 
-- This is a development server
-- No password hashing implemented
-- No authentication middleware
-- Suitable for local development only
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Test thoroughly
+5. Submit a pull request
 
-## 🚀 Deployment
+## 📄 License
 
-For production deployment, consider:
-- Adding password hashing (bcrypt)
-- Implementing JWT authentication
-- Using a proper database (PostgreSQL, MongoDB)
-- Adding rate limiting
-- Implementing HTTPS
+This project is licensed under the MIT License.
 
-## 📝 License
+## 🆘 Support
 
-MIT License
+For support or questions, please contact the SkyParty team.
+
+---
+
+**SkyParty Desktop v1.0.0** - Built with ❤️ using Electron and Railway

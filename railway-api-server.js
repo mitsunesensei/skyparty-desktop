@@ -4,6 +4,13 @@ const { Pool } = require('pg');
 const cors = require('cors');
 const path = require('path');
 
+// Ensure all required modules are available
+console.log('🔧 Loading dependencies...');
+console.log('Express:', typeof express);
+console.log('Pool:', typeof Pool);
+console.log('CORS:', typeof cors);
+console.log('Path:', typeof path);
+
 const app = express();
 const PORT = process.env.PORT || 3000;
 

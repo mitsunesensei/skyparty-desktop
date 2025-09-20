@@ -12,19 +12,7 @@
     "pg": "^8.11.3",
     "cors": "^2.8.5"
   },
-  "devDependencies": {
-    "nodemon": "^3.0.1"
-  },
   "engines": {
     "node": ">=14.0.0"
-  },
-  "keywords": [
-    "skyparty",
-    "desktop",
-    "api",
-    "railway",
-    "postgresql"
-  ],
-  "author": "SkyParty Team",
-  "license": "MIT"
+  }
 }
