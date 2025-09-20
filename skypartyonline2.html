@@ -3421,6 +3421,9 @@
                     if (success) {
                         console.log('Railway registration successful');
                         
+                        // Store username mapping in local storage for search functionality
+                        storeUsernameMapping(username, email);
+                        
                         // Initialize character data for new user
                         currentCharacter = 'kitty';
                         ownedCharacters = ['kitty'];
@@ -3924,7 +3927,7 @@
         }
 
         // User search functionality
-        function searchUsers() {
+        async function searchUsers() {
             const searchTerm = document.getElementById('userSearch').value.toLowerCase().trim();
             const userSearchResults = document.getElementById('userSearchResults');
             const userResultsList = document.getElementById('userResultsList');
@@ -3934,31 +3937,43 @@
                 return;
             }
             
-            // Get all registered usernames from localStorage
-            const usernameMappings = getUsernameMappings();
-            const usernames = Object.keys(usernameMappings);
-            
-            // Filter usernames based on search term
-            const filteredUsers = usernames.filter(username => 
-                username.toLowerCase().includes(searchTerm)
-            );
-            
-            if (filteredUsers.length === 0) {
+            // For now, fallback to local storage since Railway search endpoint doesn't exist yet
+            // TODO: Implement Railway user search API endpoint
+            try {
+                const usernameMappings = await getUsernameMappings();
+                const usernames = Object.keys(usernameMappings);
+                
+                // Filter usernames based on search term
+                const filteredUsers = usernames.filter(username => 
+                    username.toLowerCase().includes(searchTerm)
+                );
+                
+                if (filteredUsers.length === 0) {
+                    userResultsList.innerHTML = `
+                        <div style="grid-column: 1 / -1; text-align: center; padding: 20px; color: #666;">
+                            <div style="font-size: 24px; margin-bottom: 8px;">👤</div>
+                            <div>No users found matching "${searchTerm}"</div>
+                        </div>
+                    `;
+                } else {
+                    userResultsList.innerHTML = '';
+                    filteredUsers.forEach(username => {
+                        const userCard = createUserCard(username);
+                        userResultsList.appendChild(userCard);
+                    });
+                }
+                
+                userSearchResults.style.display = 'block';
+            } catch (error) {
+                console.error('Search error:', error);
                 userResultsList.innerHTML = `
                     <div style="grid-column: 1 / -1; text-align: center; padding: 20px; color: #666;">
-                        <div style="font-size: 24px; margin-bottom: 8px;">👤</div>
-                        <div>No users found matching "${searchTerm}"</div>
+                        <div style="font-size: 24px; margin-bottom: 8px;">❌</div>
+                        <div>Search error. Please try again.</div>
                     </div>
                 `;
-            } else {
-                userResultsList.innerHTML = '';
-                filteredUsers.forEach(username => {
-                    const userCard = createUserCard(username);
-                    userResultsList.appendChild(userCard);
-                });
+                userSearchResults.style.display = 'block';
             }
-            
-            userSearchResults.style.display = 'block';
         }
 
         function createUserCard(username) {
