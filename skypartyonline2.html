@@ -3207,14 +3207,17 @@
             console.log('Updating UI for logged in user:', username);
             
             // Update status display
-            const statusElement = document.querySelector('.status-text');
-            if (statusElement) {
-                statusElement.textContent = `Status: Logged in as ${username}`;
+            const userInfoElement = document.getElementById('userInfo');
+            if (userInfoElement) {
+                const statusDiv = userInfoElement.querySelector('div:last-child');
+                if (statusDiv) {
+                    statusDiv.innerHTML = `<strong>Status:</strong> Logged in as ${username}`;
+                }
             }
             
             // Update sidebar - hide login items, show profile items
             const loginSidebarItem = document.querySelector('.sidebar-item[onclick*="login"]');
-            const profileSidebarItem = document.querySelector('.sidebar-item[onclick*="profile"]');
+            const profileSidebarItem = document.getElementById('profileSidebarItem');
             
             if (loginSidebarItem) {
                 loginSidebarItem.style.display = 'none';
@@ -3222,7 +3225,7 @@
             
             if (profileSidebarItem) {
                 profileSidebarItem.style.display = 'block';
-                // Remove active class from all items first
+                // Remove active class from all sidebar items first
                 document.querySelectorAll('.sidebar-item').forEach(item => {
                     item.classList.remove('active');
                 });
@@ -3230,16 +3233,18 @@
                 profileSidebarItem.classList.add('active');
             }
             
-            // Update navigation items
+            // Update navigation items (if they exist)
             const navItems = document.querySelectorAll('.nav-item');
-            navItems.forEach(item => {
-                item.classList.remove('active');
-            });
-            
-            // Set profile navigation as active
-            const profileNavItem = document.querySelector('.nav-item[onclick*="profile"]');
-            if (profileNavItem) {
-                profileNavItem.classList.add('active');
+            if (navItems.length > 0) {
+                navItems.forEach(item => {
+                    item.classList.remove('active');
+                });
+                
+                // Set profile navigation as active if it exists
+                const profileNavItem = document.querySelector('.nav-item[onclick*="profile"]');
+                if (profileNavItem) {
+                    profileNavItem.classList.add('active');
+                }
             }
             
             // Update avatar
